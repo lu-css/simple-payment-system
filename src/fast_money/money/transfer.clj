@@ -71,15 +71,11 @@
   and send a response in case of fail."
   [remetente destinatario ammount]
 
-  (if (= remetente nil)
-    (user-not-found (:id remetente))
-
-    (if (= destinatario nil)
-      (user-not-found (:id destinatario))
-
-      (if (< (:money remetente) ammount)
-        not-enouth-money
-        true))))
+  (cond
+    (= remetente nil) (user-not-found (:id remetente))
+    (= destinatario nil) (user-not-found (:id destinatario))
+    (< (:money remetente) ammount) not-enouth-money
+    :else true))
 
 (defn transfer-money
   "Transfer money from a user to another."
