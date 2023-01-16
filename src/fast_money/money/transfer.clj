@@ -49,11 +49,10 @@
         destinatario-id (:id destinatario)]
 
     (try
-      (user/update-ammount db {:id remetente-id :money (- (:money remetente) ammount)})
+      (user/debit-money db {:id remetente-id :money ammount})
 
       (try
-        (user/update-ammount db {:id destinatario-id :money (+ (:money destinatario) ammount)})
-
+        (user/credit-money db {:id destinatario-id :money ammount})
         transation-success
 
         (catch Exception _e
