@@ -3,6 +3,8 @@
             [fast-money.db.db :refer [db]]
             [fast-money.money.responses :as responses]))
 
+(def number-only-regex #"^[0-9]+$")
+
 (defn valid-ammount?
   "Return if the value if a valid number"
   [ammount]
@@ -10,6 +12,29 @@
   (and
    (number? ammount)
    (> ammount 0)))
+
+(defn- valid-transaction?
+  "Return true if all transaction params is true,
+  and send a response in case of fail."
+  [remetente destinatario ammount]
+
+  (cond
+    (= remetente destinatario) responses/cant-send-to-yourself
+    (nil? remetente) (responses/user-not-found "'from'")
+    (nil? destinatario) (responses/user-not-found "'to'")
+    (< (:money remetente) ammount) responses/not-enouth-money
+    :else true))
+
+(defn valid-param?
+  "Return true if is a valid param format.
+  Otherwies return the corresponding error message."
+  [param]
+
+  (if-not (or
+           (nil? (re-matches number-only-regex (:id param)))
+           (nil? (re-matches number-only-regex (:destination param))))
+    true
+    responses/invalid-params))
 
 (defn- transfer
   "Transfers the money, using all validatons"
@@ -35,18 +60,6 @@
         (user/update-ammount db {:id remetente-id :money (:money remetente)})
         responses/error-while-updateing))))
 
-(defn- valid-transaction?
-  "Return true if all transaction params is true,
-  and send a response in case of fail."
-  [remetente destinatario ammount]
-
-  (cond
-    (= remetente destinatario) responses/cant-send-to-yourself
-    (= remetente nil) (responses/user-not-found "'from'")
-    (= destinatario nil) (responses/user-not-found "'to'")
-    (< (:money remetente) ammount) responses/not-enouth-money
-    :else true))
-
 (defn make-transaction
   [remetente-id destinatario-id ammount]
 
@@ -54,7 +67,7 @@
         destinatario (user/user-by-id db {:id destinatario-id})
         valid? (valid-transaction? remetente destinatario ammount)]
 
-    (if (= valid? true)
+    (if (true? valid?)
       (transfer remetente destinatario ammount)
       valid?)))
 
@@ -64,10 +77,9 @@
 
   (let [params (:params req)
         body (:body req)
-        remetente-id (Integer/parseInt (:id params))
-        destinatario-id (Integer/parseInt (:destination params))
         ammount (:ammount body)]
 
-    (if-not (valid-ammount? ammount)
-      (responses/invalid-ammount ammount)
-      (make-transaction remetente-id destinatario-id ammount))))
+    (cond
+      (false? (valid-ammount? ammount)) responses/invalid-ammount
+      (not= (valid-param? params) true) (valid-param? params)
+      :else (make-transaction (Integer/parseInt (:id params)) (Integer/parseInt (:destination params)) ammount))))

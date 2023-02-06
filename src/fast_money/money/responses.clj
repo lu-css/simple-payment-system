@@ -36,3 +36,8 @@
    :headers {"Content-Type" "application/json"}
    :body    (json/write-str {:msg "You can't send money for yoursef."})})
 
+(def invalid-params
+  {:status  401
+   :headers {"Content-Type" "application/json"}
+   :body    (json/write-str {:msg "Invalid params."})})
+
