@@ -4,7 +4,7 @@ services:
     image: postgres
     restart: always
     environment:
-      POSTGRES_PASSWORD: "url"
+      POSTGRES_PASSWORD: "payment"
     ports: 
       - 5432:5432
     volumes:

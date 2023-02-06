@@ -8,5 +8,5 @@
    :subprotocol "postgres"
    :dbtype "postgres"
    :user "postgres"
-   :password "url"})
+   :password "payment"})
 
